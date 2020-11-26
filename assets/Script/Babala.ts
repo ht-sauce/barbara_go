@@ -1,5 +1,3 @@
-import { antiShake } from '../tool/antiShakingAndThrottling.js'
-
 const {ccclass, property} = cc._decorator;
 
 @ccclass
@@ -18,10 +16,13 @@ export default class NewClass extends cc.Component {
     accel: number = 0
 
     // 加速方向开关
-    accLeft: boolean = false
-    accRight: boolean = false
+    left: boolean = false
+    right: boolean = false
 
     jumpEnd: boolean = false // 是否跳跃结束
+
+    // 主角当前水平方向速度
+    xSpeed: number = 0
 
     onLoad() {
         // 键盘监听
@@ -33,7 +34,10 @@ export default class NewClass extends cc.Component {
 
     }
 
-    update(dt) {}
+    update(dt) {
+        if (this.left) this.backward(dt)
+        if (this.right) this.forward(dt)
+    }
 
     onDestroy() {
         cc.systemEvent.off(cc.SystemEvent.EventType.KEY_DOWN, this.onKey, this)
@@ -53,16 +57,16 @@ export default class NewClass extends cc.Component {
                 this.jumpAction()
                 break
             case cc.macro.KEY.left:
-                this.backward()
+                this.left = true
                 break
             case cc.macro.KEY.a:
-                this.forward()
+                this.left = true
                 break
             case cc.macro.KEY.d:
-                this.backward()
+                this.right = true
                 break
             case cc.macro.KEY.right:
-                this.forward()
+                this.right = true
                 break
         }
     }
@@ -75,16 +79,18 @@ export default class NewClass extends cc.Component {
             case cc.macro.KEY.space:
                 break
             case cc.macro.KEY.left:
-                this.accLeft = false
+                this.left = false
+                this.xSpeed = 0
                 break
             case cc.macro.KEY.a:
-                this.accLeft = false
+                this.left = false
                 break
             case cc.macro.KEY.d:
-                this.accRight = false
+                this.right = false
                 break
             case cc.macro.KEY.right:
-                this.accRight = false
+                this.right = false
+                this.xSpeed = 0
                 break
         }
     }
@@ -107,13 +113,33 @@ export default class NewClass extends cc.Component {
     }
 
     // 向前移动
-    forward() {
-        // const tween = cc.tween().by(this.jumpDuration, {x: 10}, {easing: 'sineOut'})
-        // cc.tween(this.node).then(tween).start()
-        this.node.x += 2
+    forward(dt) {
+        // 主角移动的话
+        // this.xSpeed += this.accel * dt
+        // 背景移动
+        this.xSpeed -= this.accel * dt
+        this.move(dt)
     }
-    backward() {
-        const tween = cc.tween().by(this.jumpDuration, {x: -10}, {easing: 'sineOut'})
-        cc.tween(this.node).then(tween).start()
+    // 向后移动
+    backward(dt) {
+        // 主角移动的话
+        // this.xSpeed -= this.accel * dt
+        // 背景移动
+        this.xSpeed += this.accel * dt
+        this.move(dt)
+    }
+    move(dt) {
+        // 限制主角的速度不能超过最大值
+        if (Math.abs(this.xSpeed) > this.maxMoveSpeed) {
+            this.xSpeed = this.maxMoveSpeed * this.xSpeed / Math.abs(this.xSpeed)
+        }
+        // 根据当前速度更新主角的位置
+        if (this.left && this.node.x > -430) {
+            this.node.x -= this.xSpeed * dt;
+        }
+        if (this.right && this.node.x < -100) {
+            this.node.x -= this.xSpeed * dt;
+        }
+        // this.node.x += this.xSpeed * dt;
     }
 }
