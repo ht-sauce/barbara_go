@@ -1,6 +1,7 @@
 /library/
 /temp/
 /local/
+/build/
 npm-debug.log
 node_modules/
 *.log
