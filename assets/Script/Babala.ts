@@ -15,6 +15,14 @@ export default class NewClass extends cc.Component {
     @property() // 加速度
     accel: number = 0
 
+    @property(cc.Button)
+    Button: cc.Button = null
+
+    @property(cc.Label) // 分数
+    label: cc.Label = null
+
+    score: number = 0 // 分数
+
     // 加速方向开关
     left: boolean = false
     right: boolean = false
@@ -25,9 +33,7 @@ export default class NewClass extends cc.Component {
     xSpeed: number = 0
 
     onLoad() {
-        // 键盘监听
-        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKey, this)
-        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this)
+
     }
 
     start() {
@@ -129,6 +135,10 @@ export default class NewClass extends cc.Component {
         this.move(dt)
     }
     move(dt) {
+        if (this.right) {
+            this.score += dt * 1000
+            this.label.string = '当前分数:' + this.score.toFixed(0)
+        }
         // 限制主角的速度不能超过最大值
         if (Math.abs(this.xSpeed) > this.maxMoveSpeed) {
             this.xSpeed = this.maxMoveSpeed * this.xSpeed / Math.abs(this.xSpeed)
@@ -141,5 +151,25 @@ export default class NewClass extends cc.Component {
             this.node.x -= this.xSpeed * dt;
         }
         // this.node.x += this.xSpeed * dt;
+    }
+    // 停止
+    stopMove() {
+        this.jumpEnd = false
+        this.left = false
+        this.right = false
+        this.node.stopAllActions()
+        this.Button.node.opacity = 255
+        cc.systemEvent.off(cc.SystemEvent.EventType.KEY_DOWN, this.onKey, this)
+        cc.systemEvent.off(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this)
+    }
+    // 开始游戏
+    play() {
+        this.label.string = '当前分数:' + 0
+        this.Button.node.opacity = 0
+        this.node.x = -400
+        this.node.y = -220
+        // 键盘监听
+        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKey, this)
+        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this)
     }
 }
